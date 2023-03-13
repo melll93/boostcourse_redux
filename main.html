@@ -1,0 +1,95 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.2.1/redux.min.js"></script>
+</head>
+
+<body>
+    <div id="subject"></div>
+    <div id="TOC"></div>
+    <div id="control"></div>
+    <div id="content"></div>
+    <script>
+        const subject = () => {
+            document.querySelector('#subject').innerHTML = `
+            <header>
+                <h1>WEB</h1>
+                Hello, WEB !
+            </header>
+            `;
+        }
+
+        const TOC = () => {
+            let state = store.getState();
+            let i = 0
+            let liTags = '';
+            while (i < state.contents.length) {
+                liTags = liTags + `
+                <li>
+                    <a href="${state.contents[i]}.id"
+                    onclick="
+                    event.preventDefault();
+                    const action = {type: 'SELECT', id: ${state.contents[i].id}}
+                    store.dispatch(action);
+                    ">${state.contents[i].title}<a>
+                </li>
+                `;
+                i++
+            }
+            document.querySelector('#TOC').innerHTML = `
+            <nav>
+                <ol>
+                   ${liTags}
+                </ol>
+            </nav>
+            `;
+        }
+
+        const control = () => {
+            document.querySelector('#control').innerHTML = `
+            <ul>
+                <li><a href="/create">CREATE</a></li>
+                <li><input type="button" value="DELETE"></li>
+            </ul>
+            `;
+        }
+
+        const article = () => {
+            document.querySelector('#content').innerHTML = `
+            <article>
+                <h2>HTML</h2>
+                HTML is ...
+            </article>
+            `;
+        }
+        const reducer = (state, action) => {
+            console.log(state, action);
+            if (state === undefined) {
+                return {
+                    selected_id: null,
+                    contents: [
+                        { id: 1, title: 'HTML', desc: 'HTML is ...' },
+                        { id: 2, title: 'CSS', desc: 'CSS is ...' },
+                    ]
+                }
+            }
+            let _state;
+            if (action.type === 'SELECT') {
+                _state = Object.assign({}, state, { selected_id: action.id })
+            }
+            console.log(action, state, _state);
+            return _state;
+        }
+        const store = Redux.createStore(reducer);
+
+        subject();
+        TOC();
+        control();
+        article();
+
+    </script>
+
+
+</body>
+
+</html>
