@@ -48,25 +48,82 @@
         const control = () => {
             document.querySelector('#control').innerHTML = `
             <ul>
-                <li><a href="/create">CREATE</a></li>
-                <li><input type="button" value="DELETE"></li>
+                <li><a href="/create"
+                    onclick="
+                    event.preventDefault();
+                    store.dispatch({
+                        type: 'CHANGE_MODE',
+                        mode: 'create'
+                    })
+                    ">CREATE</a></li>
+                <li><input type="button" value="DELETE"
+                    onclick="store.dispatch({
+                        type: 'DELETE'
+                    })"></li>
             </ul>
             `;
         }
 
         const article = () => {
-            document.querySelector('#content').innerHTML = `
-            <article>
-                <h2>HTML</h2>
-                HTML is ...
-            </article>
-            `;
+            let state = store.getState();
+            if (state.mode === 'create') {
+                document.querySelector('#content').innerHTML = `
+                <article>
+                    <form onsubmit="
+                        event.preventDefault();
+                        let _title = this.title.value;
+                        let _desc = this.desc.value;
+                        store.dispatch({
+                            type:'CREATE',
+                            title: _title,
+                            desc: _desc
+                        })
+                    ">
+                        <p>
+                            <input type="text" name="title" placeholder="title">
+                        </p>
+                        <p>
+                            <textarea name="desc" placeholder="description"></textarea>
+                        </p>
+                        <p>
+                            <input type="submit">
+                        </p>
+                    </form>
+                </article>
+                `;
+            } else if (state.mode === 'read') {
+                let i = 0;
+                let aTitle, aDesc;
+                while (i < state.contents.length) {
+                    if (state.contents[i].id === state.selected_id) {
+                        aTitle = state.contents[i].title;
+                        aDesc = state.contents[i].desc;
+                        break;
+                    }
+                    i++;
+                }
+                document.querySelector('#content').innerHTML = `
+                <article>
+                    <h2>${aTitle}</h2>
+                    ${aDesc}
+                </article>
+                `;
+            } else if (state.mode === 'welcome') {
+                document.querySelector('#content').innerHTML = `
+                <article>
+                    <h2>Welcome,</h2>
+                    Hello, redux~
+                </article>
+                `;
+            }
         }
         const reducer = (state, action) => {
             console.log(state, action);
             if (state === undefined) {
                 return {
-                    selected_id: null,
+                    max_id: 2,
+                    mode: 'welcome',
+                    selected_id: 2,
                     contents: [
                         { id: 1, title: 'HTML', desc: 'HTML is ...' },
                         { id: 2, title: 'CSS', desc: 'CSS is ...' },
@@ -75,13 +132,45 @@
             }
             let _state;
             if (action.type === 'SELECT') {
-                _state = Object.assign({}, state, { selected_id: action.id })
+                _state = Object.assign({}, state, {
+                    selected_id: action.id,
+                    mode: 'read'
+                })
+            } else if (action.type === 'CREATE') {
+                let _max_id = state.max_id + 1;
+                let _contents = state.contents.concat();
+                _contents.push({ id: null, title: action.title, desc: action.desc });
+                Object.assign({}, state, {
+                    max_id: _max_id,
+                    contents: _contents,
+                    mode: 'read',
+                })
+            } else if (action.type === 'DELETE') {
+                let _contents = [];
+                let i = 0;
+                while (i < state.contents.length) {
+                    if (state.selected_id !== state.contents[i].id) {
+                        _contents.push(
+                            state.contents[i]
+                        )
+                    }
+                    i++;
+                }
+                _state = Object.assign({}, state, {
+                    contents: _contents,
+                    mode: 'welcome'
+                })
+            } else if (action.type === 'CHANGE_MODE') {
+                _state = Object.assign({}, state, {
+                    mode: action.mode
+                })
             }
             console.log(action, state, _state);
             return _state;
         }
         const store = Redux.createStore(reducer);
-
+        store.subscribe(article);
+        store.subscribe(TOC);
         subject();
         TOC();
         control();
