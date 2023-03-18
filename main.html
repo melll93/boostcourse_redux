@@ -26,7 +26,7 @@
             while (i < state.contents.length) {
                 liTags = liTags + `
                 <li>
-                    <a href="${state.contents[i]}.id"
+                    <a href="${state.contents[i].id}"
                     onclick="
                     event.preventDefault();
                     const action = {type: 'SELECT', id: ${state.contents[i].id}}
